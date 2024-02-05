@@ -39,8 +39,8 @@ class Cell {
         [WallTypeEnum.LEFT]: true,
         [WallTypeEnum.BOTTOM]: true,
     };
-    private static verWallMeshRef: BABYLON.Mesh;
-    private static horWallMeshRef: BABYLON.Mesh;
+    static verWallMeshRef: BABYLON.Mesh;
+    static horWallMeshRef: BABYLON.Mesh;
     private wallMatRef: BABYLON.StandardMaterial | undefined;
     private readonly scene: BABYLON.Scene;
 
@@ -48,28 +48,6 @@ class Cell {
         this.positionX = x;
         this.positionZ = z;
         this.scene = scene;
-
-        Cell.verWallMeshRef = BABYLON.MeshBuilder.CreateBox(
-            "verWall",
-            {
-                height: 1,
-                depth: 1,
-                width: 0.01,
-            },
-            this.scene,
-        );
-        Cell.verWallMeshRef.setEnabled(false);
-
-        Cell.horWallMeshRef = BABYLON.MeshBuilder.CreateBox(
-            "horWall",
-            {
-                height: 1,
-                depth: 0.01,
-                width: 1,
-            },
-            this.scene,
-        );
-        Cell.horWallMeshRef.setEnabled(false);
     }
 
     private getPosition(pos: WallTypeEnum) {
@@ -156,6 +134,31 @@ class Cell {
 var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const scene = new BABYLON.Scene(engine);
 
+    const verWallMeshRef = BABYLON.MeshBuilder.CreateBox(
+        "verWall",
+        {
+            height: 1,
+            depth: 1,
+            width: 0.01,
+        },
+        scene,
+    );
+    verWallMeshRef.setEnabled(false);
+
+    const horWallMeshRef = BABYLON.MeshBuilder.CreateBox(
+        "horWall",
+        {
+            height: 1,
+            depth: 0.01,
+            width: 1,
+        },
+        scene,
+    );
+    horWallMeshRef.setEnabled(false);
+
+    Cell.verWallMeshRef = verWallMeshRef;
+    Cell.horWallMeshRef = horWallMeshRef;
+
     const camera = new BABYLON.ArcRotateCamera(
         "camera",
         -Math.PI / 2,
@@ -171,19 +174,19 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const axes = new BABYLON.Debug.AxesViewer(scene, 1);
 
     const grid: Cell[][] = [];
-    for (let i = 0; i < 10; i++) {
+    for (let x = 0; x < 10; x++) {
         grid.push([]);
-        for (let j = 0; j < 10; j++) {
-            grid[i].push(new Cell(i, j, scene));
+        for (let z = 0; z < 10; z++) {
+            grid[x].push(new Cell(x, z, scene));
         }
     }
 
-    grid[1][2].walls[WallTypeEnum.RIGHT] = false;
-    grid[1][3].walls[WallTypeEnum.LEFT] = false;
+    grid[2][0].walls[WallTypeEnum.RIGHT] = false;
+    grid[3][0].walls[WallTypeEnum.LEFT] = false;
 
-    for (let i = 0; i < 10; i++) {
-        for (let j = 0; j < 10; j++) {
-            grid[i][j].draw();
+    for (let x = 0; x < 10; x++) {
+        for (let z = 0; z < 10; z++) {
+            grid[x][z].draw();
         }
     }
 
