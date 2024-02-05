@@ -30,6 +30,8 @@ export class AppOne {
     }
 }
 
+const SIZE = 20;
+
 class Cell {
     private readonly positionX;
     private readonly positionZ;
@@ -74,8 +76,8 @@ class Cell {
                 `mat_${this.positionX}_${this.positionZ}`,
             );
             wallMat.diffuseColor = new BABYLON.Color3(
-                this.positionX / 10,
-                this.positionZ / 10,
+                this.positionX / SIZE,
+                this.positionZ / SIZE,
                 1,
             );
             this.wallMatRef = wallMat;
@@ -163,8 +165,8 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         "camera",
         -Math.PI / 2,
         -Math.PI,
-        20,
-        new BABYLON.Vector3(5, 0, 5),
+        SIZE * 2,
+        new BABYLON.Vector3(SIZE / 2, 0, SIZE / 2),
     );
     camera.attachControl(canvas, true);
     const light = new BABYLON.HemisphericLight(
@@ -174,18 +176,69 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const axes = new BABYLON.Debug.AxesViewer(scene, 1);
 
     const grid: Cell[][] = [];
-    for (let x = 0; x < 10; x++) {
+    const visitArr: boolean[][] = [];
+    for (let x = 0; x < SIZE; x++) {
         grid.push([]);
-        for (let z = 0; z < 10; z++) {
+        visitArr.push([]);
+        for (let z = 0; z < SIZE; z++) {
             grid[x].push(new Cell(x, z, scene));
+            visitArr[x].push(false);
         }
     }
 
-    grid[2][0].walls[WallTypeEnum.RIGHT] = false;
-    grid[3][0].walls[WallTypeEnum.LEFT] = false;
+    scan(Math.floor(Math.random() * SIZE), Math.floor(Math.random() * SIZE));
 
-    for (let x = 0; x < 10; x++) {
-        for (let z = 0; z < 10; z++) {
+    function scan(x: number, z: number) {
+        visitArr[x][z] = true;
+        const dirs = [
+            WallTypeEnum.LEFT,
+            WallTypeEnum.RIGHT,
+            WallTypeEnum.BOTTOM,
+            WallTypeEnum.TOP,
+        ];
+        dirs.sort(() => Math.random() - 0.5);
+        dirs.forEach((dir) => {
+            if (WallTypeEnum.LEFT === dir) {
+                if (x > 0) {
+                    if (!visitArr[x - 1][z]) {
+                        grid[x - 1][z].walls[WallTypeEnum.RIGHT] = false;
+                        grid[x][z].walls[WallTypeEnum.LEFT] = false;
+                        scan(x - 1, z);
+                    }
+                }
+            }
+            if (WallTypeEnum.RIGHT === dir) {
+                if (x < SIZE - 1) {
+                    if (!visitArr[x + 1][z]) {
+                        grid[x][z].walls[WallTypeEnum.RIGHT] = false;
+                        grid[x + 1][z].walls[WallTypeEnum.LEFT] = false;
+                        scan(x + 1, z);
+                    }
+                }
+            }
+            if (WallTypeEnum.TOP === dir) {
+                if (z < SIZE - 1) {
+                    if (!visitArr[x][z + 1]) {
+                        grid[x][z + 1].walls[WallTypeEnum.BOTTOM] = false;
+                        grid[x][z].walls[WallTypeEnum.TOP] = false;
+                        scan(x, z + 1);
+                    }
+                }
+            }
+            if (WallTypeEnum.BOTTOM === dir) {
+                if (z > 0) {
+                    if (!visitArr[x][z - 1]) {
+                        grid[x][z].walls[WallTypeEnum.BOTTOM] = false;
+                        grid[x][z - 1].walls[WallTypeEnum.TOP] = false;
+                        scan(x, z - 1);
+                    }
+                }
+            }
+        });
+    }
+
+    for (let x = 0; x < SIZE; x++) {
+        for (let z = 0; z < SIZE; z++) {
             grid[x][z].draw();
         }
     }
