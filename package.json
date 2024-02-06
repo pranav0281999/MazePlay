@@ -16,7 +16,9 @@
     "vite": "^5.0.11"
   },
   "dependencies": {
-    "babylonjs": "^6.38.0",
+    "@babylonjs/core": "^6.41.0",
+    "@babylonjs/inspector": "^6.41.0",
+    "@babylonjs/materials": "^6.41.0",
     "earcut": "^2.2.4",
     "prettier": "^3.2.4"
   }

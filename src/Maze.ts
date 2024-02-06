@@ -1,4 +1,4 @@
-import * as BABYLON from "babylonjs";
+import * as BABYLON from "@babylonjs/core";
 import { Cell } from "./Cell";
 import { WallTypeEnum } from "./enums/wall-type-enum";
 

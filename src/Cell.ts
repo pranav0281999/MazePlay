@@ -1,4 +1,4 @@
-import * as BABYLON from "babylonjs";
+import * as BABYLON from "@babylonjs/core";
 import { CellWallConfigTRBL } from "./types/cell-types";
 import { WallTypeEnum } from "./enums/wall-type-enum";
 
@@ -32,16 +32,16 @@ export class Cell {
     private getPosition(pos: WallTypeEnum) {
         if (pos === WallTypeEnum.TOP || pos === WallTypeEnum.BOTTOM) {
             return new BABYLON.Vector3(
-                this.positionX + 0.5,
+                this.positionX + 0.5 - this.size / 2,
                 0.5,
-                this.positionZ - 0.005 + (pos === WallTypeEnum.TOP ? 1 : 0),
+                this.positionZ - 0.005 + (pos === WallTypeEnum.TOP ? 1 : 0) - this.size / 2,
             );
         }
         if (pos === WallTypeEnum.LEFT || pos === WallTypeEnum.RIGHT) {
             return new BABYLON.Vector3(
-                this.positionX - 0.005 + (pos === WallTypeEnum.RIGHT ? 1 : 0),
+                this.positionX - 0.005 + (pos === WallTypeEnum.RIGHT ? 1 : 0) - this.size / 2,
                 0.5,
-                this.positionZ + 0.5,
+                this.positionZ + 0.5 - this.size / 2,
             );
         }
         return new BABYLON.Vector3(0, 0, 0);
