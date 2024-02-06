@@ -36,8 +36,8 @@ const SIZE = 20;
 
 const createGround = (scene: BABYLON.Scene) => {
     const groundMat = new GradientMaterial("groundMat", scene);
-    groundMat.topColor = new BABYLON.Color3(1, 0, 1);
-    groundMat.bottomColor = new BABYLON.Color3(0, 0, 1);
+    groundMat.topColor = new BABYLON.Color3(0.6, 0, 0.6);
+    groundMat.bottomColor = new BABYLON.Color3(0, 0, 0.6);
     groundMat.offset = 0.5;
     groundMat.smoothness = 1;
     groundMat.scale = 0.05;
