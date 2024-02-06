@@ -35,12 +35,14 @@ export class AppOne {
 const SIZE = 20;
 
 const createGround = (scene: BABYLON.Scene) => {
-    const groundMat = new GradientMaterial("groundMat", scene);
-    groundMat.topColor = new BABYLON.Color3(0.6, 0, 0.6);
-    groundMat.bottomColor = new BABYLON.Color3(0, 0, 0.6);
-    groundMat.offset = 0.5;
-    groundMat.smoothness = 1;
-    groundMat.scale = 0.05;
+    // const groundMat = new GradientMaterial("groundMat", scene);
+    // groundMat.topColor = new BABYLON.Color3(0.6, 0, 0.6);
+    // groundMat.bottomColor = new BABYLON.Color3(0, 0, 0.6);
+    // groundMat.offset = 0.5;
+    // groundMat.smoothness = 1;
+    // groundMat.scale = 0.05;
+    const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+    groundMat.emissiveColor = new BABYLON.Color3(0.6, 0, 0.6);
     const ground = BABYLON.MeshBuilder.CreatePlane(
         "ground",
         { width: SIZE, height: SIZE },
@@ -52,6 +54,13 @@ const createGround = (scene: BABYLON.Scene) => {
 
 var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const scene = new BABYLON.Scene(engine);
+    scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+    scene.fogDensity = 0.3;
+    scene.fogColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+    const gl = new BABYLON.GlowLayer("glow", scene);
+    gl.intensity = 0.5;
+
     const camera = new BABYLON.ArcRotateCamera(
         "camera",
         -Math.PI / 2,
@@ -78,7 +87,7 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         new BABYLON.Vector3(SIZE / 2, SIZE / 2, SIZE / 2),
     );
 
-    new BABYLON.AxesViewer(scene, 1);
+    // new BABYLON.AxesViewer(scene, 1);
 
     new Maze(SIZE, scene);
 
