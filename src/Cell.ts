@@ -34,12 +34,18 @@ export class Cell {
             return new BABYLON.Vector3(
                 this.positionX + 0.5 - this.size / 2,
                 0.5,
-                this.positionZ - 0.005 + (pos === WallTypeEnum.TOP ? 1 : 0) - this.size / 2,
+                this.positionZ -
+                    0.005 +
+                    (pos === WallTypeEnum.TOP ? 1 : 0) -
+                    this.size / 2,
             );
         }
         if (pos === WallTypeEnum.LEFT || pos === WallTypeEnum.RIGHT) {
             return new BABYLON.Vector3(
-                this.positionX - 0.005 + (pos === WallTypeEnum.RIGHT ? 1 : 0) - this.size / 2,
+                this.positionX -
+                    0.005 +
+                    (pos === WallTypeEnum.RIGHT ? 1 : 0) -
+                    this.size / 2,
                 0.5,
                 this.positionZ + 0.5 - this.size / 2,
             );
@@ -102,7 +108,7 @@ export class Cell {
     }
 
     public draw() {
-        if (this.walls[WallTypeEnum.LEFT]) {
+        if (this.walls[WallTypeEnum.LEFT] && this.positionX === 0) {
             const wallL = this.createVerticalWall(
                 `wall_l_${this.positionX}_${this.positionZ}`,
             );
@@ -116,7 +122,7 @@ export class Cell {
             wallR.position = this.getPosition(WallTypeEnum.RIGHT);
         }
 
-        if (this.walls[WallTypeEnum.TOP]) {
+        if (this.walls[WallTypeEnum.TOP] && this.positionZ === this.size - 1) {
             const wallT = this.createHorizontalWall(
                 `wall_t_${this.positionX}_${this.positionZ}`,
             );
