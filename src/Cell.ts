@@ -85,6 +85,8 @@ export class Cell {
         const instance = Cell.verWallMeshRef.clone(name);
         instance.material = this.getWallMat();
         instance.setEnabled(true);
+        instance.checkCollisions = true;
+        instance.ellipsoid = new BABYLON.Vector3(1, 1, 0.01);
         return instance;
     }
 
@@ -104,6 +106,8 @@ export class Cell {
         const instance = Cell.horWallMeshRef.clone(name);
         instance.material = this.getWallMat();
         instance.setEnabled(true);
+        instance.checkCollisions = true;
+        instance.ellipsoid = new BABYLON.Vector3(1, 1, 0.01);
         return instance;
     }
 
