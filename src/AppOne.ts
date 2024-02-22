@@ -36,6 +36,7 @@ const SIZE = 20;
 const createGround = (scene: BABYLON.Scene) => {
     const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     groundMat.emissiveColor = new BABYLON.Color3(0.6, 0, 0.6);
+    groundMat.disableLighting = true;
     const ground = BABYLON.MeshBuilder.CreatePlane(
         "ground",
         { width: SIZE, height: SIZE },
@@ -67,21 +68,14 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     // );
     // camera.attachControl(canvas, true);
 
-    new BABYLON.PointLight(
-        "light",
+    const lightCoords = [
         new BABYLON.Vector3(-SIZE / 2, SIZE / 2, SIZE / 2),
-    );
-    new BABYLON.PointLight(
-        "light",
         new BABYLON.Vector3(SIZE / 2, SIZE / 2, -SIZE / 2),
-    );
-    new BABYLON.PointLight(
-        "light",
         new BABYLON.Vector3(-SIZE / 2, SIZE / 2, -SIZE / 2),
-    );
-    new BABYLON.PointLight(
-        "light",
         new BABYLON.Vector3(SIZE / 2, SIZE / 2, SIZE / 2),
+    ];
+    lightCoords.forEach(
+        (coord, index) => new BABYLON.PointLight(`light_${index}`, coord),
     );
 
     new BABYLON.AxesViewer(scene, 1);
@@ -100,7 +94,7 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 
     const camera = new BABYLON.UniversalCamera(
         "cam",
-        new BABYLON.Vector3(0, 0.2, 0.5),
+        new BABYLON.Vector3(0, 1, 1),
         scene,
     );
     camera.lockedTarget = camRoot.position;
@@ -132,42 +126,117 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         ),
     );
 
-    let hero = BABYLON.MeshBuilder.CreateSphere(
-        "sphere",
-        { diameter: 0.2 },
+    // Load hero character
+    BABYLON.SceneLoader.ImportMesh(
+        "",
+        "http://localhost:8080/",
+        "untitled.glb",
         scene,
+        function (newMeshes, particleSystems, skeletons, animationGroups) {
+            var hero = newMeshes[0];
+            hero.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
+            camRoot.parent = hero;
+
+            console.log(animationGroups);
+
+            hero.position.y = 0;
+
+            //Hero character variables
+            var heroSpeed = 0.03;
+            var heroSpeedBackwards = 0.01;
+            var heroRotationSpeed = 0.1;
+
+            var animating = true;
+
+            const walkAnim = scene.getAnimationGroupByName("Running");
+            const walkBackAnim = scene.getAnimationGroupByName("Moonwalk");
+            const idleAnim = scene.getAnimationGroupByName("Idle");
+            const sambaAnim = scene.getAnimationGroupByName("Dance");
+
+            //Rendering loop (executed for everyframe)
+            scene.onBeforeRenderObservable.add(() => {
+                var keydown = false;
+                //Manage the movements of the character (e.g. position, direction)
+                if (inputMap["w"]) {
+                    const forwardScale = hero.forward.scaleInPlace(heroSpeed);
+                    hero.moveWithCollisions(forwardScale);
+                    hero.position.y = 0;
+                    keydown = true;
+                }
+                if (inputMap["s"]) {
+                    hero.moveWithCollisions(
+                        hero.forward.scaleInPlace(-heroSpeedBackwards),
+                    );
+                    keydown = true;
+                }
+                if (inputMap["a"]) {
+                    hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+                    keydown = true;
+                }
+                if (inputMap["d"]) {
+                    hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+                    keydown = true;
+                }
+                if (inputMap["b"]) {
+                    keydown = true;
+                }
+
+                //Manage animations to be played
+                if (keydown) {
+                    if (!animating) {
+                        animating = true;
+                        if (inputMap["s"]) {
+                            //Walk backwards
+                            walkBackAnim?.start(
+                                true,
+                                1.0,
+                                walkBackAnim.from,
+                                walkBackAnim.to,
+                                false,
+                            );
+                        } else if (inputMap["b"]) {
+                            //Samba!
+                            sambaAnim?.start(
+                                true,
+                                1.0,
+                                sambaAnim.from,
+                                sambaAnim.to,
+                                false,
+                            );
+                        } else {
+                            //Walk
+                            walkAnim?.start(
+                                true,
+                                1.0,
+                                walkAnim.from,
+                                walkAnim.to,
+                                false,
+                            );
+                        }
+                    }
+                } else {
+                    if (animating) {
+                        //Default animation is idle when no key is down
+                        idleAnim?.start(
+                            true,
+                            1.0,
+                            idleAnim.from,
+                            idleAnim.to,
+                            false,
+                        );
+
+                        //Stop all animations besides Idle Anim when no key is down
+                        sambaAnim?.stop();
+                        walkAnim?.stop();
+                        walkBackAnim?.stop();
+
+                        //Ensure animation are played only once per rendering loop
+                        animating = false;
+                    }
+                }
+            });
+        },
     );
-    hero.ellipsoid = new BABYLON.Vector3(0.2, 0.2, 0.2);
-    camRoot.parent = hero;
-
-    //Scale the model down
-    hero.position.y = 0.1;
-    hero.position.x = 0.25;
-    hero.position.z = 0.25;
-    hero.checkCollisions = true;
-
-    let heroSpeed = 0.03;
-    let heroSpeedBackwards = 0.01;
-    let heroRotationSpeed = 0.1;
-
-    scene.onBeforeRenderObservable.add(() => {
-        if (inputMap["w"]) {
-            const abc = hero.forward.scaleInPlace(heroSpeed);
-            hero.moveWithCollisions(abc);
-            hero.position.y = 0.1;
-        }
-        if (inputMap["s"]) {
-            hero.moveWithCollisions(
-                hero.forward.scaleInPlace(-heroSpeedBackwards),
-            );
-        }
-        if (inputMap["a"]) {
-            hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
-        }
-        if (inputMap["d"]) {
-            hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
-        }
-    });
 
     return scene;
 };

@@ -58,10 +58,11 @@ export class Cell {
             const wallMat = new BABYLON.StandardMaterial(
                 `mat_${this.positionX}_${this.positionZ}`,
             );
-            wallMat.diffuseColor = new BABYLON.Color3(
-                this.positionX / this.size,
-                this.positionZ / this.size,
-                1,
+            wallMat.disableLighting = true;
+            wallMat.emissiveColor = new BABYLON.Color3(
+                (this.positionX / this.size) * 0.5,
+                (this.positionZ / this.size) * 0.5,
+                0.5,
             );
             this.wallMatRef = wallMat;
         }
