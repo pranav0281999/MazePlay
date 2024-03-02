@@ -51,6 +51,52 @@ const createGround = (scene: BABYLON.Scene) => {
     return ground;
 };
 
+const CAMERA_RADIUS = 1;
+
+const setPlayerCamera = (
+    scene: BABYLON.Scene,
+    character: BABYLON.AbstractMesh,
+    camera: BABYLON.ArcRotateCamera,
+) => {
+    const directionMesh = new BABYLON.Mesh("abc");
+    directionMesh.setParent(camera);
+    directionMesh.bakeCurrentTransformIntoVertices();
+    directionMesh.isPickable = false;
+
+    const playerCameraFocusMesh = new BABYLON.AbstractMesh("abc2", scene);
+    playerCameraFocusMesh.position.y = 0.5;
+    playerCameraFocusMesh.isPickable = false;
+
+    playerCameraFocusMesh.setParent(character);
+    camera.setTarget(playerCameraFocusMesh);
+
+    scene.onBeforeRenderObservable.add(function () {
+        let worldMatrix = playerCameraFocusMesh.getWorldMatrix();
+        let quaternion = new BABYLON.Quaternion();
+        let position = new BABYLON.Vector3();
+        let scale = new BABYLON.Vector3();
+
+        worldMatrix.decompose(scale, quaternion, position);
+
+        const direction = directionMesh.getDirection(
+            new BABYLON.Vector3(0, 0, -1),
+        );
+        direction.normalize();
+        const ray = new BABYLON.Ray(position, direction, 10);
+        // let rayHelper = new BABYLON.RayHelper(ray);
+        // rayHelper.show(scene);
+        let hits = scene.pickWithRay(ray);
+        if (hits?.pickedMesh) {
+            const distance = hits?.pickedPoint?.subtract(position).length();
+            if (distance) {
+                camera.radius = Math.min(distance, CAMERA_RADIUS);
+            }
+        } else {
+            camera.radius = CAMERA_RADIUS;
+        }
+    });
+};
+
 let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const scene = new BABYLON.Scene(engine);
     // scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
@@ -79,13 +125,11 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 
     createGround(scene);
 
-    const cameraRadius = 1;
-
     const camera = new BABYLON.ArcRotateCamera(
         "camera",
         BABYLON.Tools.ToRadians(-90),
         BABYLON.Tools.ToRadians(60),
-        cameraRadius,
+        CAMERA_RADIUS,
         new BABYLON.Vector3(0, 0, 0),
         scene,
     );
@@ -93,15 +137,6 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     camera.wheelPrecision = 15;
     camera.fov = BABYLON.Tools.ToRadians(90);
     camera.minZ = 0;
-
-    const directionMesh = new BABYLON.Mesh("abc");
-    directionMesh.setParent(camera);
-    directionMesh.bakeCurrentTransformIntoVertices();
-    directionMesh.isPickable = false;
-
-    const playerCameraFocusMesh = new BABYLON.AbstractMesh("abc2", scene);
-    playerCameraFocusMesh.position.y = 0.5;
-    playerCameraFocusMesh.isPickable = false;
 
     // Keyboard events
     let inputMap: { [key: string]: string } = {};
@@ -134,39 +169,35 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         undefined,
         scene,
         function (newMeshes, particleSystems, skeletons, animationGroups) {
-            var hero = newMeshes[0];
+            let hero = newMeshes[0];
             hero.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
 
             hero.position.y = 0;
 
-            playerCameraFocusMesh.setParent(hero);
-            camera.setTarget(playerCameraFocusMesh);
-
-            function setMetadata(mesh: BABYLON.AbstractMesh) {
-                mesh.metadata = "player";
+            function setIsPickableRecursive(mesh: BABYLON.AbstractMesh) {
                 mesh.isPickable = false;
                 for (let childMesh of mesh.getChildMeshes()) {
-                    setMetadata(childMesh);
+                    setIsPickableRecursive(childMesh);
                 }
             }
 
-            setMetadata(hero);
+            setIsPickableRecursive(hero);
 
             //Hero character variables
-            var heroSpeed = 0.03;
-            var heroSpeedBackwards = 0.01;
-            var heroRotationSpeed = 0.1;
+            let heroSpeed = 0.03;
+            let heroSpeedBackwards = 0.01;
+            let heroRotationSpeed = 0.1;
 
-            var animating = true;
+            let animating = true;
 
             const walkAnim = scene.getAnimationGroupByName("Running");
             const walkBackAnim = scene.getAnimationGroupByName("Moonwalk");
             const idleAnim = scene.getAnimationGroupByName("Idle");
             const sambaAnim = scene.getAnimationGroupByName("Dance");
 
-            //Rendering loop (executed for everyframe)
+            //Rendering loop (executed for every frame)
             scene.onBeforeRenderObservable.add(() => {
-                var keydown = false;
+                let keydown = false;
                 //Manage the movements of the character (e.g. position, direction)
                 if (inputMap["w"]) {
                     const forwardScale = hero.forward.scaleInPlace(heroSpeed);
@@ -247,33 +278,7 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                 }
             });
 
-            scene.onBeforeRenderObservable.add(function () {
-                var worldMatrix = playerCameraFocusMesh.getWorldMatrix();
-                var quaternion = new BABYLON.Quaternion();
-                var position = new BABYLON.Vector3();
-                var scale = new BABYLON.Vector3();
-
-                worldMatrix.decompose(scale, quaternion, position);
-
-                const direction = directionMesh.getDirection(
-                    new BABYLON.Vector3(0, 0, -1),
-                );
-                direction.normalize();
-                const ray = new BABYLON.Ray(position, direction, 10);
-                // let rayHelper = new BABYLON.RayHelper(ray);
-                // rayHelper.show(scene);
-                let hits = scene.pickWithRay(ray);
-                if (hits?.pickedMesh) {
-                    const distance = hits?.pickedPoint
-                        ?.subtract(position)
-                        .length();
-                    if (distance) {
-                        camera.radius = Math.min(distance, cameraRadius);
-                    }
-                } else {
-                    camera.radius = cameraRadius;
-                }
-            });
+            setPlayerCamera(scene, hero, camera);
         },
     );
 
