@@ -3,6 +3,9 @@ import "@babylonjs/inspector";
 import * as BABYLON from "@babylonjs/core";
 import { Maze } from "./Maze";
 
+// @ts-ignore
+import character from "./assets/character.glb";
+
 export class AppOne {
     engine: BABYLON.Engine;
     scene: BABYLON.Scene;
@@ -50,33 +53,25 @@ const createGround = (scene: BABYLON.Scene) => {
 
 let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const scene = new BABYLON.Scene(engine);
-    scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
-    scene.fogDensity = 0.3;
-    scene.fogColor = new BABYLON.Color3(0.8, 0.8, 0.8);
-    scene.gravity = new BABYLON.Vector3(0, -9, 0);
+    // scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+    // scene.fogDensity = 0.3;
+    // scene.fogColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+    // scene.gravity = new BABYLON.Vector3(0, -9, 0);
     scene.collisionsEnabled = true;
 
-    const gl = new BABYLON.GlowLayer("glow", scene);
-    gl.intensity = 0.5;
+    // const gl = new BABYLON.GlowLayer("glow", scene);
+    // gl.intensity = 0.5;
 
-    // const camera = new BABYLON.ArcRotateCamera(
-    //     "camera",
-    //     -Math.PI / 2,
-    //     -Math.PI,
-    //     SIZE * 2,
-    //     new BABYLON.Vector3(0, 0, 0),
+    // const lightCoords = [
+    //     new BABYLON.Vector3(-SIZE / 2, SIZE / 2, SIZE / 2),
+    //     new BABYLON.Vector3(SIZE / 2, SIZE / 2, -SIZE / 2),
+    //     new BABYLON.Vector3(-SIZE / 2, SIZE / 2, -SIZE / 2),
+    //     new BABYLON.Vector3(SIZE / 2, SIZE / 2, SIZE / 2),
+    // ];
+    // lightCoords.forEach(
+    //     (coord, index) => new BABYLON.PointLight(`light_${index}`, coord),
     // );
-    // camera.attachControl(canvas, true);
-
-    const lightCoords = [
-        new BABYLON.Vector3(-SIZE / 2, SIZE / 2, SIZE / 2),
-        new BABYLON.Vector3(SIZE / 2, SIZE / 2, -SIZE / 2),
-        new BABYLON.Vector3(-SIZE / 2, SIZE / 2, -SIZE / 2),
-        new BABYLON.Vector3(SIZE / 2, SIZE / 2, SIZE / 2),
-    ];
-    lightCoords.forEach(
-        (coord, index) => new BABYLON.PointLight(`light_${index}`, coord),
-    );
+    new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0));
 
     new BABYLON.AxesViewer(scene, 1);
 
@@ -84,23 +79,29 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 
     createGround(scene);
 
-    // https://doc.babylonjs.com/guidedLearning/createAGame/playerCamera
-    let camRoot = new BABYLON.TransformNode("root");
-    camRoot.position = new BABYLON.Vector3(0, 0, 0);
-    camRoot.rotation = new BABYLON.Vector3(0, Math.PI, 0);
+    const cameraRadius = 1;
 
-    let yTilt = new BABYLON.TransformNode("ytilt");
-    yTilt.parent = camRoot;
-
-    const camera = new BABYLON.UniversalCamera(
-        "cam",
-        new BABYLON.Vector3(0, 1, 1),
+    const camera = new BABYLON.ArcRotateCamera(
+        "camera",
+        BABYLON.Tools.ToRadians(-90),
+        BABYLON.Tools.ToRadians(60),
+        cameraRadius,
+        new BABYLON.Vector3(0, 0, 0),
         scene,
     );
-    camera.lockedTarget = camRoot.position;
+    camera.attachControl(canvas, true);
+    camera.wheelPrecision = 15;
     camera.fov = BABYLON.Tools.ToRadians(90);
-    camera.parent = yTilt;
     camera.minZ = 0;
+
+    const directionMesh = new BABYLON.Mesh("abc");
+    directionMesh.setParent(camera);
+    directionMesh.bakeCurrentTransformIntoVertices();
+    directionMesh.isPickable = false;
+
+    const playerCameraFocusMesh = new BABYLON.AbstractMesh("abc2", scene);
+    playerCameraFocusMesh.position.y = 0.5;
+    playerCameraFocusMesh.isPickable = false;
 
     // Keyboard events
     let inputMap: { [key: string]: string } = {};
@@ -128,18 +129,28 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 
     // Load hero character
     BABYLON.SceneLoader.ImportMesh(
-        "",
-        "http://localhost:8080/",
-        "untitled.glb",
+        null,
+        character,
+        undefined,
         scene,
         function (newMeshes, particleSystems, skeletons, animationGroups) {
             var hero = newMeshes[0];
             hero.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
-            camRoot.parent = hero;
-
-            console.log(animationGroups);
 
             hero.position.y = 0;
+
+            playerCameraFocusMesh.setParent(hero);
+            camera.setTarget(playerCameraFocusMesh);
+
+            function setMetadata(mesh: BABYLON.AbstractMesh) {
+                mesh.metadata = "player";
+                mesh.isPickable = false;
+                for (let childMesh of mesh.getChildMeshes()) {
+                    setMetadata(childMesh);
+                }
+            }
+
+            setMetadata(hero);
 
             //Hero character variables
             var heroSpeed = 0.03;
@@ -170,11 +181,11 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                     keydown = true;
                 }
                 if (inputMap["a"]) {
-                    hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+                    hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
                     keydown = true;
                 }
                 if (inputMap["d"]) {
-                    hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+                    hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
                     keydown = true;
                 }
                 if (inputMap["b"]) {
@@ -233,6 +244,34 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                         //Ensure animation are played only once per rendering loop
                         animating = false;
                     }
+                }
+            });
+
+            scene.onBeforeRenderObservable.add(function () {
+                var worldMatrix = playerCameraFocusMesh.getWorldMatrix();
+                var quaternion = new BABYLON.Quaternion();
+                var position = new BABYLON.Vector3();
+                var scale = new BABYLON.Vector3();
+
+                worldMatrix.decompose(scale, quaternion, position);
+
+                const direction = directionMesh.getDirection(
+                    new BABYLON.Vector3(0, 0, -1),
+                );
+                direction.normalize();
+                const ray = new BABYLON.Ray(position, direction, 10);
+                // let rayHelper = new BABYLON.RayHelper(ray);
+                // rayHelper.show(scene);
+                let hits = scene.pickWithRay(ray);
+                if (hits?.pickedMesh) {
+                    const distance = hits?.pickedPoint
+                        ?.subtract(position)
+                        .length();
+                    if (distance) {
+                        camera.radius = Math.min(distance, cameraRadius);
+                    }
+                } else {
+                    camera.radius = cameraRadius;
                 }
             });
         },
