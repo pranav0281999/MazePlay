@@ -52,18 +52,23 @@ const createGround = (scene: BABYLON.Scene) => {
 };
 
 const CAMERA_RADIUS = 1;
+let globalPosition: BABYLON.Vector3;
+let globalDirection: BABYLON.Vector3;
 
 const setPlayerCamera = (
     scene: BABYLON.Scene,
     character: BABYLON.AbstractMesh,
     camera: BABYLON.ArcRotateCamera,
 ) => {
-    const directionMesh = new BABYLON.Mesh("abc");
+    const directionMesh = new BABYLON.Mesh("directionMesh");
     directionMesh.setParent(camera);
     directionMesh.bakeCurrentTransformIntoVertices();
     directionMesh.isPickable = false;
 
-    const playerCameraFocusMesh = new BABYLON.AbstractMesh("abc2", scene);
+    const playerCameraFocusMesh = new BABYLON.AbstractMesh(
+        "playerCameraFocusMesh",
+        scene,
+    );
     playerCameraFocusMesh.position.y = 0.5;
     playerCameraFocusMesh.isPickable = false;
 
@@ -71,8 +76,6 @@ const setPlayerCamera = (
     camera.setTarget(playerCameraFocusMesh);
 
     scene.onBeforeRenderObservable.add(function () {
-        // character.rotation.y = camera.getDirection(new BABYLON.Vector3(0,0,1)).z;
-
         let worldMatrix = playerCameraFocusMesh.getWorldMatrix();
         let quaternion = new BABYLON.Quaternion();
         let position = new BABYLON.Vector3();
@@ -84,6 +87,10 @@ const setPlayerCamera = (
             new BABYLON.Vector3(0, 0, -1),
         );
         direction.normalize();
+
+        globalDirection = direction.clone();
+        globalPosition = position.clone();
+
         const ray = new BABYLON.Ray(position, direction, 10);
         // let rayHelper = new BABYLON.RayHelper(ray);
         // rayHelper.show(scene);
@@ -110,15 +117,6 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const gl = new BABYLON.GlowLayer("glow", scene);
     gl.intensity = 0.5;
 
-    // const lightCoords = [
-    //     new BABYLON.Vector3(-SIZE / 2, SIZE / 2, SIZE / 2),
-    //     new BABYLON.Vector3(SIZE / 2, SIZE / 2, -SIZE / 2),
-    //     new BABYLON.Vector3(-SIZE / 2, SIZE / 2, -SIZE / 2),
-    //     new BABYLON.Vector3(SIZE / 2, SIZE / 2, SIZE / 2),
-    // ];
-    // lightCoords.forEach(
-    //     (coord, index) => new BABYLON.PointLight(`light_${index}`, coord),
-    // );
     new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0));
 
     new BABYLON.AxesViewer(scene, 1);
@@ -171,14 +169,14 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         undefined,
         scene,
         function (newMeshes, particleSystems, skeletons, animationGroups) {
-            let hero = newMeshes[0];
-            hero.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
+            let character = newMeshes[0];
+            character.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
 
-            setPlayerCamera(scene, hero, camera);
+            setPlayerCamera(scene, character, camera);
 
-            hero.position.y = 0;
-            hero.position.x = 0.5;
-            hero.position.z = 0.5;
+            character.position.y = 0;
+            character.position.x = 0.5;
+            character.position.z = 0.5;
 
             function setIsPickableRecursive(mesh: BABYLON.AbstractMesh) {
                 mesh.isPickable = false;
@@ -187,7 +185,7 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                 }
             }
 
-            setIsPickableRecursive(hero);
+            setIsPickableRecursive(character);
 
             //Hero character variables
             let heroSpeed = 0.03;
@@ -206,23 +204,28 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                 let keydown = false;
                 //Manage the movements of the character (e.g. position, direction)
                 if (inputMap["w"]) {
-                    const forwardScale = hero.forward.scaleInPlace(heroSpeed);
-                    hero.moveWithCollisions(forwardScale);
-                    hero.position.y = 0;
+                    const characterFocusPoint = globalPosition.add(globalDirection);
+                    characterFocusPoint.y = 0;
+                    character.lookAt(characterFocusPoint);
+
+                    const forwardScale =
+                        character.forward.scaleInPlace(heroSpeed);
+                    character.moveWithCollisions(forwardScale);
+                    character.position.y = 0;
                     keydown = true;
                 }
                 if (inputMap["s"]) {
-                    hero.moveWithCollisions(
-                        hero.forward.scaleInPlace(-heroSpeedBackwards),
+                    character.moveWithCollisions(
+                        character.forward.scaleInPlace(-heroSpeedBackwards),
                     );
                     keydown = true;
                 }
                 if (inputMap["a"]) {
-                    hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+                    character.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
                     keydown = true;
                 }
                 if (inputMap["d"]) {
-                    hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+                    character.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
                     keydown = true;
                 }
                 if (inputMap["b"]) {
