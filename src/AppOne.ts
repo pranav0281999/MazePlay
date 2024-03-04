@@ -71,6 +71,8 @@ const setPlayerCamera = (
     camera.setTarget(playerCameraFocusMesh);
 
     scene.onBeforeRenderObservable.add(function () {
+        // character.rotation.y = camera.getDirection(new BABYLON.Vector3(0,0,1)).z;
+
         let worldMatrix = playerCameraFocusMesh.getWorldMatrix();
         let quaternion = new BABYLON.Quaternion();
         let position = new BABYLON.Vector3();
@@ -105,8 +107,8 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     // scene.gravity = new BABYLON.Vector3(0, -9, 0);
     scene.collisionsEnabled = true;
 
-    // const gl = new BABYLON.GlowLayer("glow", scene);
-    // gl.intensity = 0.5;
+    const gl = new BABYLON.GlowLayer("glow", scene);
+    gl.intensity = 0.5;
 
     // const lightCoords = [
     //     new BABYLON.Vector3(-SIZE / 2, SIZE / 2, SIZE / 2),
@@ -172,7 +174,11 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
             let hero = newMeshes[0];
             hero.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
 
+            setPlayerCamera(scene, hero, camera);
+
             hero.position.y = 0;
+            hero.position.x = 0.5;
+            hero.position.z = 0.5;
 
             function setIsPickableRecursive(mesh: BABYLON.AbstractMesh) {
                 mesh.isPickable = false;
@@ -277,8 +283,6 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                     }
                 }
             });
-
-            setPlayerCamera(scene, hero, camera);
         },
     );
 
