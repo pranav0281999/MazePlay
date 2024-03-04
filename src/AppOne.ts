@@ -54,6 +54,7 @@ const createGround = (scene: BABYLON.Scene) => {
 const CAMERA_RADIUS = 1;
 let globalPosition: BABYLON.Vector3;
 let globalDirection: BABYLON.Vector3;
+let globalDirectionLeft: BABYLON.Vector3;
 
 const setPlayerCamera = (
     scene: BABYLON.Scene,
@@ -89,6 +90,9 @@ const setPlayerCamera = (
         direction.normalize();
 
         globalDirection = direction.clone();
+        globalDirectionLeft = directionMesh
+            .getDirection(new BABYLON.Vector3(1, 0, 0))
+            .normalize();
         globalPosition = position.clone();
 
         const ray = new BABYLON.Ray(position, direction, 10);
@@ -204,7 +208,8 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                 let keydown = false;
                 //Manage the movements of the character (e.g. position, direction)
                 if (inputMap["w"]) {
-                    const characterFocusPoint = globalPosition.add(globalDirection);
+                    const characterFocusPoint =
+                        globalPosition.add(globalDirection);
                     characterFocusPoint.y = 0;
                     character.lookAt(characterFocusPoint);
 
@@ -215,17 +220,36 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                     keydown = true;
                 }
                 if (inputMap["s"]) {
+                    const characterFocusPoint =
+                        globalPosition.add(globalDirection);
+                    characterFocusPoint.y = 0;
+                    character.lookAt(characterFocusPoint);
+
                     character.moveWithCollisions(
                         character.forward.scaleInPlace(-heroSpeedBackwards),
                     );
                     keydown = true;
                 }
                 if (inputMap["a"]) {
-                    character.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+                    const characterFocusPoint =
+                        globalPosition.add(globalDirectionLeft);
+                    characterFocusPoint.y = 0;
+                    character.lookAt(characterFocusPoint);
+
+                    character.moveWithCollisions(
+                        character.forward.scaleInPlace(heroSpeed),
+                    );
                     keydown = true;
                 }
                 if (inputMap["d"]) {
-                    character.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+                    const characterFocusPoint =
+                        globalPosition.subtract(globalDirectionLeft);
+                    characterFocusPoint.y = 0;
+                    character.lookAt(characterFocusPoint);
+
+                    character.moveWithCollisions(
+                        character.forward.scaleInPlace(heroSpeed),
+                    );
                     keydown = true;
                 }
                 if (inputMap["b"]) {
