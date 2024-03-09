@@ -1,6 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
-import { CellWallConfigTRBL } from "./types/cell-types";
-import { WallTypeEnum } from "./enums/wall-type-enum";
+import { CellWallConfigTRBL } from "../types/cell-types";
+import { WallTypeEnum } from "../enums/wall-type-enum";
 
 export class Cell {
     private readonly positionX;

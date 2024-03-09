@@ -1,6 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
 import { Cell } from "./Cell";
-import { WallTypeEnum } from "./enums/wall-type-enum";
+import { WallTypeEnum } from "../enums/wall-type-enum";
 
 export class Maze {
     private grid: Cell[][];

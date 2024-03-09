@@ -1,12 +1,12 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import * as BABYLON from "@babylonjs/core";
-import { Maze } from "./Maze";
+import { Maze } from "./components/Maze";
 
 // @ts-ignore
 import character from "./assets/character.glb";
 
-export class AppOne {
+export class App {
     engine: BABYLON.Engine;
     scene: BABYLON.Scene;
 
