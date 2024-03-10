@@ -24,7 +24,15 @@ async function joinRoom() {
 
             // update local target position
             player.onChange(() => {
-                console.log("player", player);
+                console.log(
+                    "player",
+                    [player.position.x, player.position.y, player.position.z],
+                    [
+                        player.direction.x,
+                        player.direction.y,
+                        player.direction.z,
+                    ],
+                );
             });
         });
 

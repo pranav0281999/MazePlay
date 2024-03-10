@@ -35,6 +35,7 @@ export class Direction extends Schema {
 export class Player extends Schema {
     @type(Position) position: Position = new Position();
     @type(Direction) direction: Direction = new Direction();
+    @type("string") animation: string = "";
 }
 
 export class MyRoomState extends Schema {

@@ -3,9 +3,9 @@ import "@babylonjs/inspector";
 import * as BABYLON from "@babylonjs/core";
 import { Maze } from "./components/Maze";
 // @ts-ignore
-import character from "./assets/character.glb";
+import characterGLB from "./assets/character.glb";
 import * as Colyseus from "colyseus.js";
-import { MyRoomState } from "./classes/IPlayerState";
+import { MyRoomState, Player } from "./classes/IPlayerState";
 
 export class App {
     engine: BABYLON.Engine;
@@ -21,7 +21,7 @@ export class App {
         window.addEventListener("resize", () => {
             this.engine.resize();
         });
-        this.scene = createScene(this.engine, this.canvas);
+        this.scene = createScene(this.engine, this.canvas, this.room);
     }
 
     debug(debugOn: boolean = true) {
@@ -60,6 +60,7 @@ const CAMERA_RADIUS = 1;
 let FOCUS_POINT: BABYLON.Vector3;
 let FOCUS_DIRECTION_FRONT: BABYLON.Vector3;
 let FOCUS_DIRECTION_LEFT: BABYLON.Vector3;
+let FORWARD: BABYLON.Vector3;
 
 const setPlayerCamera = (
     scene: BABYLON.Scene,
@@ -119,7 +120,11 @@ const startAnimation = (
     animation?.start(true, 1.0, animation.from, animation.to, false);
 };
 
-let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
+let createScene = function (
+    engine: BABYLON.Engine,
+    canvas: HTMLCanvasElement,
+    room: Colyseus.Room<MyRoomState>,
+) {
     const scene = new BABYLON.Scene(engine);
     scene.collisionsEnabled = true;
 
@@ -166,7 +171,7 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 
     BABYLON.SceneLoader.ImportMesh(
         null,
-        character,
+        characterGLB,
         undefined,
         scene,
         function (newMeshes, particleSystems, skeletons, animationGroups) {
@@ -194,10 +199,10 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 
             let animating = true;
 
-            const walkAnim = scene.getAnimationGroupByName("Running");
-            const walkBackAnim = scene.getAnimationGroupByName("Moonwalk");
-            const idleAnim = scene.getAnimationGroupByName("Idle");
-            const sambaAnim = scene.getAnimationGroupByName("Dance");
+            const walkAnim = animationGroups[3];
+            const walkBackAnim = animationGroups[2];
+            const idleAnim = animationGroups[1];
+            const sambaAnim = animationGroups[0];
 
             let heroSpeedLocal: number = 0;
             let characterFocusPoint: BABYLON.Vector3;
@@ -242,6 +247,7 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                     character.moveWithCollisions(
                         character.forward.scaleInPlace(heroSpeedLocal),
                     );
+                    FORWARD = character.forward;
                 }
 
                 //Manage animations to be played
@@ -272,6 +278,14 @@ let createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
             });
         },
     );
+
+    setInterval(() => {
+        room.send("playerUpdate", {
+            position: { x: FOCUS_POINT.x, y: 0, z: FOCUS_POINT.z },
+            direction: { x: FORWARD.x, y: FORWARD.y, z: FORWARD.z },
+            animation: "",
+        } as Player);
+    }, 5000);
 
     return scene;
 };
