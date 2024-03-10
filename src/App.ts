@@ -11,6 +11,7 @@ export class App {
     engine: BABYLON.Engine;
     scene: BABYLON.Scene;
     room: Colyseus.Room<MyRoomState>;
+    characterContainer?: BABYLON.AssetContainer;
 
     constructor(
         readonly canvas: HTMLCanvasElement,
@@ -18,10 +19,27 @@ export class App {
     ) {
         this.room = room;
         this.engine = new BABYLON.Engine(canvas);
+        this.scene = new BABYLON.Scene(this.engine);
         window.addEventListener("resize", () => {
             this.engine.resize();
         });
-        this.scene = createScene(this.engine, this.canvas, this.room);
+    }
+
+    loadAssets(resolve?: () => void, reject?: (e: any) => void) {
+        BABYLON.SceneLoader.LoadAssetContainer(
+            characterGLB,
+            undefined,
+            this.scene,
+            (container) => {
+                this.characterContainer = container;
+                !!resolve && resolve();
+            },
+            undefined,
+            (scene, message, e) => {
+                console.error(message, e);
+                !!reject && reject(e);
+            },
+        );
     }
 
     debug(debugOn: boolean = true) {
@@ -33,6 +51,16 @@ export class App {
     }
 
     run() {
+        if (!this.characterContainer) {
+            return;
+        }
+        createScene(
+            this.scene,
+            this.canvas,
+            this.room,
+            this.characterContainer,
+        );
+
         this.debug(true);
         this.engine.runRenderLoop(() => {
             this.scene.render();
@@ -121,11 +149,11 @@ const startAnimation = (
 };
 
 let createScene = function (
-    engine: BABYLON.Engine,
+    scene: BABYLON.Scene,
     canvas: HTMLCanvasElement,
     room: Colyseus.Room<MyRoomState>,
+    characterContainer: BABYLON.AssetContainer,
 ) {
-    const scene = new BABYLON.Scene(engine);
     scene.collisionsEnabled = true;
 
     const gl = new BABYLON.GlowLayer("glow", scene);
@@ -169,115 +197,104 @@ let createScene = function (
         ),
     );
 
-    BABYLON.SceneLoader.ImportMesh(
-        null,
-        characterGLB,
-        undefined,
-        scene,
-        function (newMeshes, particleSystems, skeletons, animationGroups) {
-            const character = newMeshes[0];
-            character.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
+    const character = characterContainer.meshes[0];
+    character.ellipsoid = new BABYLON.Vector3(0.1, 0.5, 0.1);
 
-            setPlayerCamera(scene, character, camera);
+    characterContainer.addAllToScene();
 
-            character.position.y = 0;
-            character.position.x = 0.5;
-            character.position.z = 0.5;
+    setPlayerCamera(scene, character, camera);
 
-            function setIsPickableRecursive(mesh: BABYLON.AbstractMesh) {
-                mesh.isPickable = false;
-                for (let childMesh of mesh.getChildMeshes()) {
-                    setIsPickableRecursive(childMesh);
+    character.position.y = 0;
+    character.position.x = 0.5;
+    character.position.z = 0.5;
+
+    function setIsPickableRecursive(mesh: BABYLON.AbstractMesh) {
+        mesh.isPickable = false;
+        for (let childMesh of mesh.getChildMeshes()) {
+            setIsPickableRecursive(childMesh);
+        }
+    }
+
+    setIsPickableRecursive(character);
+
+    //Hero character variables
+    let heroSpeed = 0.03;
+    let heroSpeedBackwards = 0.01;
+
+    let animating = true;
+
+    const walkAnim = characterContainer.animationGroups[3];
+    const walkBackAnim = characterContainer.animationGroups[2];
+    const idleAnim = characterContainer.animationGroups[1];
+    const sambaAnim = characterContainer.animationGroups[0];
+
+    let heroSpeedLocal: number = 0;
+    let characterFocusPoint: BABYLON.Vector3;
+    //Rendering loop (executed for every frame)
+    scene.onBeforeRenderObservable.add(() => {
+        let keydown = false;
+        //Manage the movements of the character (e.g. position, direction)
+        if (inputMap["w"]) {
+            characterFocusPoint = FOCUS_POINT.add(FOCUS_DIRECTION_FRONT);
+            heroSpeedLocal = heroSpeed;
+            keydown = true;
+        }
+        if (inputMap["s"]) {
+            characterFocusPoint = FOCUS_POINT.add(FOCUS_DIRECTION_FRONT);
+            heroSpeedLocal = -heroSpeedBackwards;
+            keydown = true;
+        }
+        if (inputMap["a"]) {
+            characterFocusPoint = FOCUS_POINT.add(FOCUS_DIRECTION_LEFT);
+            heroSpeedLocal = heroSpeed;
+            keydown = true;
+        }
+        if (inputMap["d"]) {
+            characterFocusPoint = FOCUS_POINT.subtract(FOCUS_DIRECTION_LEFT);
+            heroSpeedLocal = heroSpeed;
+            keydown = true;
+        }
+        if (inputMap["b"]) {
+            keydown = true;
+            heroSpeedLocal = 0;
+        }
+
+        if (keydown) {
+            characterFocusPoint.y = 0;
+            character.lookAt(characterFocusPoint);
+
+            character.moveWithCollisions(
+                character.forward.scaleInPlace(heroSpeedLocal),
+            );
+            FORWARD = character.forward;
+        }
+
+        //Manage animations to be played
+        if (keydown) {
+            if (!animating) {
+                animating = true;
+                if (inputMap["s"]) {
+                    startAnimation(walkBackAnim);
+                } else if (inputMap["b"]) {
+                    startAnimation(sambaAnim);
+                } else {
+                    startAnimation(walkAnim);
                 }
             }
+        } else {
+            if (animating) {
+                startAnimation(idleAnim);
 
-            setIsPickableRecursive(character);
+                //Stop all animations besides Idle Anim when no key is down
+                sambaAnim?.stop();
+                walkAnim?.stop();
+                walkBackAnim?.stop();
 
-            //Hero character variables
-            let heroSpeed = 0.03;
-            let heroSpeedBackwards = 0.01;
-
-            let animating = true;
-
-            const walkAnim = animationGroups[3];
-            const walkBackAnim = animationGroups[2];
-            const idleAnim = animationGroups[1];
-            const sambaAnim = animationGroups[0];
-
-            let heroSpeedLocal: number = 0;
-            let characterFocusPoint: BABYLON.Vector3;
-            //Rendering loop (executed for every frame)
-            scene.onBeforeRenderObservable.add(() => {
-                let keydown = false;
-                //Manage the movements of the character (e.g. position, direction)
-                if (inputMap["w"]) {
-                    characterFocusPoint = FOCUS_POINT.add(
-                        FOCUS_DIRECTION_FRONT,
-                    );
-                    heroSpeedLocal = heroSpeed;
-                    keydown = true;
-                }
-                if (inputMap["s"]) {
-                    characterFocusPoint = FOCUS_POINT.add(
-                        FOCUS_DIRECTION_FRONT,
-                    );
-                    heroSpeedLocal = -heroSpeedBackwards;
-                    keydown = true;
-                }
-                if (inputMap["a"]) {
-                    characterFocusPoint = FOCUS_POINT.add(FOCUS_DIRECTION_LEFT);
-                    heroSpeedLocal = heroSpeed;
-                    keydown = true;
-                }
-                if (inputMap["d"]) {
-                    characterFocusPoint =
-                        FOCUS_POINT.subtract(FOCUS_DIRECTION_LEFT);
-                    heroSpeedLocal = heroSpeed;
-                    keydown = true;
-                }
-                if (inputMap["b"]) {
-                    keydown = true;
-                    heroSpeedLocal = 0;
-                }
-
-                if (keydown) {
-                    characterFocusPoint.y = 0;
-                    character.lookAt(characterFocusPoint);
-
-                    character.moveWithCollisions(
-                        character.forward.scaleInPlace(heroSpeedLocal),
-                    );
-                    FORWARD = character.forward;
-                }
-
-                //Manage animations to be played
-                if (keydown) {
-                    if (!animating) {
-                        animating = true;
-                        if (inputMap["s"]) {
-                            startAnimation(walkBackAnim);
-                        } else if (inputMap["b"]) {
-                            startAnimation(sambaAnim);
-                        } else {
-                            startAnimation(walkAnim);
-                        }
-                    }
-                } else {
-                    if (animating) {
-                        startAnimation(idleAnim);
-
-                        //Stop all animations besides Idle Anim when no key is down
-                        sambaAnim?.stop();
-                        walkAnim?.stop();
-                        walkBackAnim?.stop();
-
-                        //Ensure animation are played only once per rendering loop
-                        animating = false;
-                    }
-                }
-            });
-        },
-    );
+                //Ensure animation are played only once per rendering loop
+                animating = false;
+            }
+        }
+    });
 
     setInterval(() => {
         room.send("playerUpdate", {
@@ -286,6 +303,4 @@ let createScene = function (
             animation: "",
         } as Player);
     }, 5000);
-
-    return scene;
 };

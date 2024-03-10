@@ -7,10 +7,29 @@ const joinBtn = document.getElementById("join-btn") as HTMLButtonElement;
 const startScreen = document.getElementById(
     "start-screen-div",
 ) as HTMLDivElement;
+const loadingScreen = document.getElementById(
+    "loading-screen-div",
+) as HTMLDivElement;
+let room: Colyseus.Room<MyRoomState>;
 
 console.log(`main.ts starting ${App.name}`);
 
-let room: Colyseus.Room<MyRoomState>;
+function showLoadingScreen() {
+    startScreen.style.display = "none";
+    loadingScreen.style.display = "flex";
+}
+
+function showCanvas() {
+    startScreen.style.display = "none";
+    loadingScreen.style.display = "none";
+}
+
+function showStartScreen() {
+    startScreen.style.display = "flex";
+    loadingScreen.style.display = "none";
+}
+
+showStartScreen();
 
 async function joinRoom() {
     let client = new Colyseus.Client("ws://localhost:2567");
@@ -63,7 +82,14 @@ function startRender() {
     startScreen.style.display = "none";
     let canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
     let app = new App(canvas, room);
-    app.run();
+    showLoadingScreen();
+    app.loadAssets(
+        () => {
+            app.run();
+            showCanvas();
+        },
+        () => {},
+    );
 }
 
 // window.addEventListener('DOMContentLoaded', () => {

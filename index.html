@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <!-- files in public folder are served as root. Here the favicon is taken from the public folder. -->
   <link rel="icon" type="image/png" href="favicon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1.0, minimum-scale=1.0">
@@ -21,7 +21,7 @@
       height: 100%;
     }
 
-    #start-screen-div {
+    #start-screen-div, #loading-screen-div {
       background: antiquewhite;
       width: 100%;
       height: 100%;
@@ -42,19 +42,28 @@
       font-size: 2rem;
       font-weight: bold;
     }
+
+    .loading-p {
+      color: darkblue;
+      font-size: 3rem;
+      font-weight: bold;
+    }
   </style>
 </head>
 
 <body>
-  <div id="start-screen-div">
-    <button class="game-btn" id="join-btn">Join Server</button>
-    <br>
-    <br>
-    <br>
-    <button class="game-btn" id="start-btn">Play</button>
-  </div>
-  <canvas id="renderCanvas"></canvas>
-  <script type="module" src="/src/main.ts"></script>
+<div id="loading-screen-div">
+  <p class="loading-p">Loading...</p>
+</div>
+<div id="start-screen-div">
+  <button class="game-btn" id="join-btn">Join Server</button>
+  <br>
+  <br>
+  <br>
+  <button class="game-btn" id="start-btn">Play</button>
+</div>
+<canvas id="renderCanvas"></canvas>
+<script type="module" src="/src/main.ts"></script>
 </body>
 
 </html>
