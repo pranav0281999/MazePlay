@@ -2,15 +2,21 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import * as BABYLON from "@babylonjs/core";
 import { Maze } from "./components/Maze";
-
 // @ts-ignore
 import character from "./assets/character.glb";
+import * as Colyseus from "colyseus.js";
+import { MyRoomState } from "./classes/IPlayerState";
 
 export class App {
     engine: BABYLON.Engine;
     scene: BABYLON.Scene;
+    room: Colyseus.Room<MyRoomState>;
 
-    constructor(readonly canvas: HTMLCanvasElement) {
+    constructor(
+        readonly canvas: HTMLCanvasElement,
+        room: Colyseus.Room<MyRoomState>,
+    ) {
+        this.room = room;
         this.engine = new BABYLON.Engine(canvas);
         window.addEventListener("resize", () => {
             this.engine.resize();
