@@ -10,6 +10,9 @@ const startScreen = document.getElementById(
 const loadingScreen = document.getElementById(
     "loading-screen-div",
 ) as HTMLDivElement;
+const serverUrlInput = document.getElementById(
+    "server-url-input",
+) as HTMLInputElement;
 let room: Colyseus.Room<MyRoomState>;
 
 console.log(`main.ts starting ${App.name}`);
@@ -31,8 +34,8 @@ function showStartScreen() {
 
 showStartScreen();
 
-async function joinRoom() {
-    let client = new Colyseus.Client("ws://localhost:2567");
+async function joinRoom(url: string) {
+    let client = new Colyseus.Client(url);
     try {
         room = await client.joinOrCreate<MyRoomState>("room_name");
 
@@ -96,5 +99,5 @@ function startRender() {
 //     startRender();
 // });
 
-joinBtn.addEventListener("click", joinRoom);
+joinBtn.addEventListener("click", () => joinRoom(serverUrlInput.value));
 startBtn.addEventListener("click", startRender);

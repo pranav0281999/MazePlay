@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8"/>
   <!-- files in public folder are served as root. Here the favicon is taken from the public folder. -->
@@ -48,6 +47,19 @@
       font-size: 3rem;
       font-weight: bold;
     }
+
+    .start-input {
+      outline: none;
+      border: solid darkblue;
+      padding: 0.5rem 1rem;
+      font-size: 2rem;
+    }
+
+    .start-text {
+      color: darkblue;
+      font-size: 2rem;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -56,6 +68,12 @@
   <p class="loading-p">Loading...</p>
 </div>
 <div id="start-screen-div">
+  <label class="start-text">
+    Server Link:
+    <br>
+    <input class="start-input" id="server-url-input" type="text" placeholder="Server URL" value="ws://localhost:2567"/>
+  </label>
+  <br>
   <button class="game-btn" id="join-btn">Join Server</button>
   <br>
   <br>
@@ -65,5 +83,4 @@
 <canvas id="renderCanvas"></canvas>
 <script type="module" src="/src/main.ts"></script>
 </body>
-
 </html>
