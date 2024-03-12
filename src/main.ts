@@ -38,45 +38,7 @@ async function joinRoom(url: string) {
     let client = new Colyseus.Client(url);
     try {
         room = await client.joinOrCreate<MazePlayRoomState>("room_name");
-
         console.log(room.sessionId, "joined", room.name);
-
-        room.state.players.onAdd((player, sessionId) => {
-            console.log("player joined", player);
-
-            // update local target position
-            player.onChange(() => {
-                console.log(
-                    "player",
-                    [player.position.x, player.position.y, player.position.z],
-                    [
-                        player.direction.x,
-                        player.direction.y,
-                        player.direction.z,
-                    ],
-                );
-            });
-        });
-
-        room.state.players.onRemove((player, sessionId) => {
-            console.log("player left", player);
-        })
-
-        room.onStateChange((state) => {
-            console.log(room.name, "has new state:", state);
-        });
-
-        room.onMessage("message_type", (message) => {
-            console.log(room.sessionId, "received on", room.name, message);
-        });
-
-        room.onError((code: number, message?: string) => {
-            console.log(room.sessionId, "couldn't join", room.name);
-        });
-
-        room.onLeave((code: number) => {
-            console.log(room.sessionId, "left", room.name);
-        });
     } catch (e) {
         console.error("JOIN ERROR", e);
     }

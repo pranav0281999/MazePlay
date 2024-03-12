@@ -5,7 +5,8 @@ import { Maze } from "./components/Maze";
 // @ts-ignore
 import characterGLB from "./assets/character.glb";
 import * as Colyseus from "colyseus.js";
-import { MazePlayRoomState, Player } from "./classes/MazePlayRoomState";
+import { MazePlayRoomState, PlayerState } from "./classes/MazePlayRoomState";
+import { Player, PlayerAnimEnum } from "./classes/Player";
 
 export class App {
     engine: BABYLON.Engine;
@@ -90,6 +91,8 @@ let FOCUS_DIRECTION_FRONT: BABYLON.Vector3;
 let FOCUS_DIRECTION_LEFT: BABYLON.Vector3;
 let FORWARD: BABYLON.Vector3;
 
+const players: { [key: string]: Player } = {};
+
 const setPlayerCamera = (
     scene: BABYLON.Scene,
     character: BABYLON.AbstractMesh,
@@ -107,10 +110,12 @@ const setPlayerCamera = (
     playerCameraFocusMesh.position.y = 0.5;
     playerCameraFocusMesh.isPickable = false;
 
-    playerCameraFocusMesh.setParent(character);
     camera.setTarget(playerCameraFocusMesh);
 
     scene.onBeforeRenderObservable.add(function () {
+        playerCameraFocusMesh.position.x = character.position.x;
+        playerCameraFocusMesh.position.z = character.position.z;
+
         let worldMatrix = playerCameraFocusMesh.getWorldMatrix();
         let quaternion = new BABYLON.Quaternion();
         let position = new BABYLON.Vector3();
@@ -304,6 +309,69 @@ let createScene = function (
             position: { x: FOCUS_POINT.x, y: 0, z: FOCUS_POINT.z },
             direction: { x: FORWARD.x, y: FORWARD.y, z: FORWARD.z },
             animation: "",
-        } as Player);
+        } as PlayerState);
     }, 5000);
+
+    try {
+        room.state.players.onAdd((player, sessionId) => {
+            if (sessionId === room.sessionId) {
+                return;
+            }
+
+            console.log("player joined", player);
+            players[sessionId] = new Player(
+                characterContainer.instantiateModelsToScene(),
+                scene,
+            );
+
+            // update local target position
+            player.onChange(() => {
+                console.log(
+                    "player",
+                    [player.position.x, player.position.y, player.position.z],
+                    [
+                        player.direction.x,
+                        player.direction.y,
+                        player.direction.z,
+                    ],
+                    player.animation,
+                );
+                players[sessionId].setPosition(
+                    player.position.x,
+                    player.position.y,
+                    player.position.z,
+                );
+                players[sessionId].setDirection(
+                    player.direction.x,
+                    player.direction.y,
+                    player.direction.z,
+                );
+                players[sessionId].animate(player.animation);
+            });
+        });
+
+        room.state.players.onRemove((player, sessionId) => {
+            console.log("player left", player);
+            players[sessionId].dispose();
+            delete players[sessionId];
+        });
+
+        room.onStateChange((state) => {
+            console.log(room.name, "has new state:", state);
+        });
+
+        room.onMessage("message_type", (message) => {
+            console.log(room.sessionId, "received on", room.name, message);
+        });
+
+        room.onError((code: number, message?: string) => {
+            console.log(room.sessionId, "couldn't join", room.name);
+        });
+
+        room.onLeave((code: number) => {
+            console.log(room.sessionId, "left", room.name);
+        });
+    } catch (e) {
+        console.error(e);
+    }
 };
