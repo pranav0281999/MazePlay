@@ -38,6 +38,6 @@ export class Player extends Schema {
     @type("string") animation: string = "";
 }
 
-export class MyRoomState extends Schema {
+export class MazePlayRoomState extends Schema {
     @type({ map: Player }) players = new MapSchema<Player>();
 }

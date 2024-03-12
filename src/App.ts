@@ -5,17 +5,17 @@ import { Maze } from "./components/Maze";
 // @ts-ignore
 import characterGLB from "./assets/character.glb";
 import * as Colyseus from "colyseus.js";
-import { MyRoomState, Player } from "./classes/IPlayerState";
+import { MazePlayRoomState, Player } from "./classes/MazePlayRoomState";
 
 export class App {
     engine: BABYLON.Engine;
     scene: BABYLON.Scene;
-    room: Colyseus.Room<MyRoomState>;
+    room: Colyseus.Room<MazePlayRoomState>;
     characterContainer?: BABYLON.AssetContainer;
 
     constructor(
         readonly canvas: HTMLCanvasElement,
-        room: Colyseus.Room<MyRoomState>,
+        room: Colyseus.Room<MazePlayRoomState>,
     ) {
         this.room = room;
         this.engine = new BABYLON.Engine(canvas);
@@ -151,7 +151,7 @@ const startAnimation = (
 let createScene = function (
     scene: BABYLON.Scene,
     canvas: HTMLCanvasElement,
-    room: Colyseus.Room<MyRoomState>,
+    room: Colyseus.Room<MazePlayRoomState>,
     characterContainer: BABYLON.AssetContainer,
 ) {
     scene.collisionsEnabled = true;
@@ -297,6 +297,9 @@ let createScene = function (
     });
 
     setInterval(() => {
+        if (!FOCUS_POINT || !FORWARD) {
+            return;
+        }
         room.send("playerUpdate", {
             position: { x: FOCUS_POINT.x, y: 0, z: FOCUS_POINT.z },
             direction: { x: FORWARD.x, y: FORWARD.y, z: FORWARD.z },

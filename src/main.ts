@@ -1,6 +1,6 @@
 import { App as App } from "./App";
 import * as Colyseus from "colyseus.js";
-import { MyRoomState } from "./classes/IPlayerState";
+import { MazePlayRoomState } from "./classes/MazePlayRoomState";
 
 const startBtn = document.getElementById("start-btn") as HTMLButtonElement;
 const joinBtn = document.getElementById("join-btn") as HTMLButtonElement;
@@ -13,7 +13,7 @@ const loadingScreen = document.getElementById(
 const serverUrlInput = document.getElementById(
     "server-url-input",
 ) as HTMLInputElement;
-let room: Colyseus.Room<MyRoomState>;
+let room: Colyseus.Room<MazePlayRoomState>;
 
 console.log(`main.ts starting ${App.name}`);
 
@@ -37,7 +37,7 @@ showStartScreen();
 async function joinRoom(url: string) {
     let client = new Colyseus.Client(url);
     try {
-        room = await client.joinOrCreate<MyRoomState>("room_name");
+        room = await client.joinOrCreate<MazePlayRoomState>("room_name");
 
         console.log(room.sessionId, "joined", room.name);
 
@@ -57,6 +57,10 @@ async function joinRoom(url: string) {
                 );
             });
         });
+
+        room.state.players.onRemove((player, sessionId) => {
+            console.log("player left", player);
+        })
 
         room.onStateChange((state) => {
             console.log(room.name, "has new state:", state);
