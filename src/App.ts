@@ -89,7 +89,6 @@ const CAMERA_RADIUS = 1;
 let FOCUS_POINT: BABYLON.Vector3;
 let FOCUS_DIRECTION_FRONT: BABYLON.Vector3;
 let FOCUS_DIRECTION_LEFT: BABYLON.Vector3;
-let FORWARD: BABYLON.Vector3;
 
 const players: { [key: string]: Player } = {};
 
@@ -271,7 +270,6 @@ let createScene = function (
             character.moveWithCollisions(
                 character.forward.scaleInPlace(heroSpeedLocal),
             );
-            FORWARD = character.forward;
         }
 
         //Manage animations to be played
@@ -302,12 +300,17 @@ let createScene = function (
     });
 
     setInterval(() => {
-        if (!FOCUS_POINT || !FORWARD) {
+        if (!FOCUS_POINT) {
             return;
         }
         room.send("playerUpdate", {
             position: { x: FOCUS_POINT.x, y: 0, z: FOCUS_POINT.z },
-            direction: { x: FORWARD.x, y: FORWARD.y, z: FORWARD.z },
+            direction: {
+                x: character.rotationQuaternion?.x,
+                y: character.rotationQuaternion?.y,
+                z: character.rotationQuaternion?.z,
+                w: character.rotationQuaternion?.w,
+            },
             animation: "",
         } as PlayerState);
     }, 5000);
@@ -333,6 +336,7 @@ let createScene = function (
                         player.direction.x,
                         player.direction.y,
                         player.direction.z,
+                        player.direction.w,
                     ],
                     player.animation,
                 );
@@ -342,9 +346,12 @@ let createScene = function (
                     player.position.z,
                 );
                 players[sessionId].setDirection(
-                    player.direction.x,
-                    player.direction.y,
-                    player.direction.z,
+                    new BABYLON.Quaternion(
+                        player.direction.x,
+                        player.direction.y,
+                        player.direction.z,
+                        player.direction.w,
+                    ),
                 );
                 players[sessionId].animate(player.animation);
             });
@@ -357,11 +364,11 @@ let createScene = function (
         });
 
         room.onStateChange((state) => {
-            console.log(room.name, "has new state:", state);
+            // console.log(room.name, "has new state:", state);
         });
 
         room.onMessage("message_type", (message) => {
-            console.log(room.sessionId, "received on", room.name, message);
+            // console.log(room.sessionId, "received on", room.name, message);
         });
 
         room.onError((code: number, message?: string) => {

@@ -7,12 +7,9 @@ export class PositionState extends Schema {
 
     constructor(x?: number, y?: number, z?: number) {
         super();
-        if (!x || !y || !z) {
-            return;
-        }
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.x = x ?? 0;
+        this.y = y ?? 0;
+        this.z = z ?? 0;
     }
 }
 
@@ -20,15 +17,14 @@ export class DirectionState extends Schema {
     @type("number") x: number = 0;
     @type("number") y: number = 0;
     @type("number") z: number = 0;
+    @type("number") w: number = 0;
 
-    constructor(x?: number, y?: number, z?: number) {
+    constructor(x?: number, y?: number, z?: number, w?: number) {
         super();
-        if (!x || !y || !z) {
-            return;
-        }
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.x = x ?? 0;
+        this.y = y ?? 0;
+        this.z = z ?? 0;
+        this.w = w ?? 0;
     }
 }
 

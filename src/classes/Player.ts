@@ -1,5 +1,4 @@
 import * as BABYLON from "@babylonjs/core";
-import { Vector3 } from "@babylonjs/core";
 
 export enum PlayerAnimEnum {
     walk = "walk",
@@ -29,16 +28,15 @@ export class Player {
 
     public setPosition(x: number, y: number, z: number) {
         for (let node of this.rootNodes as BABYLON.Mesh[]) {
-            node.position.x += x;
-            node.position.x += x;
-            node.position.x += x;
+            node.position.x = x;
+            node.position.y = y;
+            node.position.z = z;
         }
     }
 
-    public setDirection(x: number, y: number, z: number) {
+    public setDirection(que: BABYLON.Quaternion) {
         for (let node of this.rootNodes as BABYLON.Mesh[]) {
-            const lookAtPoint = node.position.add(new Vector3(x, y, z));
-            node.lookAt(lookAtPoint);
+            node.rotationQuaternion = que;
         }
     }
 
