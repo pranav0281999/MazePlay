@@ -62,7 +62,7 @@ export class App {
             this.characterContainer,
         );
 
-        this.debug(true);
+        this.debug(false);
         this.engine.runRenderLoop(() => {
             this.scene.render();
         });
@@ -151,6 +151,8 @@ const startAnimation = (
 ) => {
     animation?.start(true, 1.0, animation.from, animation.to, false);
 };
+
+let CURRENT_ANIMATION = "";
 
 let createScene = function (
     scene: BABYLON.Scene,
@@ -263,7 +265,7 @@ let createScene = function (
             heroSpeedLocal = 0;
         }
 
-        if (keydown) {
+        if (keydown && !!characterFocusPoint) {
             characterFocusPoint.y = 0;
             character.lookAt(characterFocusPoint);
 
@@ -277,15 +279,19 @@ let createScene = function (
             if (!animating) {
                 animating = true;
                 if (inputMap["s"]) {
+                    CURRENT_ANIMATION = PlayerAnimEnum.walkBack;
                     startAnimation(walkBackAnim);
                 } else if (inputMap["b"]) {
+                    CURRENT_ANIMATION = PlayerAnimEnum.dance;
                     startAnimation(sambaAnim);
                 } else {
+                    CURRENT_ANIMATION = PlayerAnimEnum.walk;
                     startAnimation(walkAnim);
                 }
             }
         } else {
             if (animating) {
+                CURRENT_ANIMATION = PlayerAnimEnum.idle;
                 startAnimation(idleAnim);
 
                 //Stop all animations besides Idle Anim when no key is down
@@ -311,9 +317,9 @@ let createScene = function (
                 z: character.rotationQuaternion?.z,
                 w: character.rotationQuaternion?.w,
             },
-            animation: "",
+            animation: CURRENT_ANIMATION,
         } as PlayerState);
-    }, 5000);
+    }, 100);
 
     try {
         room.state.players.onAdd((player, sessionId) => {

@@ -13,7 +13,7 @@ export class Player {
     private readonly walkBackAnim: BABYLON.AnimationGroup;
     private readonly idleAnim: BABYLON.AnimationGroup;
     private readonly danceAnim: BABYLON.AnimationGroup;
-    private currentAnimation?: PlayerAnimEnum;
+    private currentAnimation?: string;
 
     public constructor(
         readonly instantiatedEntries: BABYLON.InstantiatedEntries,
@@ -48,33 +48,25 @@ export class Player {
         switch (animation) {
             case PlayerAnimEnum.dance:
                 if (this.currentAnimation !== PlayerAnimEnum.dance) {
-                    this.stopAnimation(PlayerAnimEnum.walk);
-                    this.stopAnimation(PlayerAnimEnum.walkBack);
-                    this.stopAnimation(PlayerAnimEnum.idle);
+                    this.stopAnimation(this.currentAnimation ?? "");
                     this.startAnimation(this.danceAnim);
                 }
                 break;
             case PlayerAnimEnum.idle:
                 if (this.currentAnimation !== PlayerAnimEnum.idle) {
-                    this.stopAnimation(PlayerAnimEnum.dance);
-                    this.stopAnimation(PlayerAnimEnum.walk);
-                    this.stopAnimation(PlayerAnimEnum.walkBack);
+                    this.stopAnimation(this.currentAnimation ?? "");
                     this.startAnimation(this.idleAnim);
                 }
                 break;
             case PlayerAnimEnum.walk:
                 if (this.currentAnimation !== PlayerAnimEnum.walk) {
-                    this.stopAnimation(PlayerAnimEnum.dance);
-                    this.stopAnimation(PlayerAnimEnum.walkBack);
-                    this.stopAnimation(PlayerAnimEnum.idle);
+                    this.stopAnimation(this.currentAnimation ?? "");
                     this.startAnimation(this.walkAnim);
                 }
                 break;
             case PlayerAnimEnum.walkBack:
                 if (this.currentAnimation !== PlayerAnimEnum.walkBack) {
-                    this.stopAnimation(PlayerAnimEnum.dance);
-                    this.stopAnimation(PlayerAnimEnum.walk);
-                    this.stopAnimation(PlayerAnimEnum.idle);
+                    this.stopAnimation(this.currentAnimation ?? "");
                     this.startAnimation(this.walkBackAnim);
                 }
                 break;
@@ -82,6 +74,7 @@ export class Player {
                 this.stopAllAnimation();
                 break;
         }
+        this.currentAnimation = animation;
     }
 
     public stopAllAnimation() {
@@ -91,7 +84,7 @@ export class Player {
         this.idleAnim.stop();
     }
 
-    public stopAnimation(animation: PlayerAnimEnum) {
+    public stopAnimation(animation: string) {
         switch (animation) {
             case PlayerAnimEnum.dance:
                 this.danceAnim.stop();
