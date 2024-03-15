@@ -2,7 +2,7 @@
   "name": "friends",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite --open",
+    "dev": "vite --host",
     "build": "tsc && vite build",
     "preview": "tsc && vite build && vite preview --host --open"
   },

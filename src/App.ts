@@ -7,6 +7,7 @@ import characterGLB from "./assets/character.glb";
 import * as Colyseus from "colyseus.js";
 import { MazePlayRoomState, PlayerState } from "./classes/MazePlayRoomState";
 import { Player, PlayerAnimEnum } from "./classes/Player";
+import { throttle } from "./utils/throttle";
 
 export class App {
     engine: BABYLON.Engine;
@@ -274,6 +275,24 @@ let createScene = function (
             );
         }
 
+        if (keydown || animating) {
+            throttle(() => {
+                if (!FOCUS_POINT) {
+                    return;
+                }
+                room.send("playerUpdate", {
+                    position: { x: FOCUS_POINT.x, y: 0, z: FOCUS_POINT.z },
+                    direction: {
+                        x: character.rotationQuaternion?.x,
+                        y: character.rotationQuaternion?.y,
+                        z: character.rotationQuaternion?.z,
+                        w: character.rotationQuaternion?.w,
+                    },
+                    animation: CURRENT_ANIMATION,
+                } as PlayerState);
+            }, 100);
+        }
+
         //Manage animations to be played
         if (keydown) {
             if (!animating) {
@@ -305,22 +324,6 @@ let createScene = function (
         }
     });
 
-    setInterval(() => {
-        if (!FOCUS_POINT) {
-            return;
-        }
-        room.send("playerUpdate", {
-            position: { x: FOCUS_POINT.x, y: 0, z: FOCUS_POINT.z },
-            direction: {
-                x: character.rotationQuaternion?.x,
-                y: character.rotationQuaternion?.y,
-                z: character.rotationQuaternion?.z,
-                w: character.rotationQuaternion?.w,
-            },
-            animation: CURRENT_ANIMATION,
-        } as PlayerState);
-    }, 100);
-
     try {
         room.state.players.onAdd((player, sessionId) => {
             if (sessionId === room.sessionId) {
@@ -332,6 +335,7 @@ let createScene = function (
                 characterContainer.instantiateModelsToScene(),
                 scene,
             );
+            players[sessionId].animate(PlayerAnimEnum.idle);
 
             // update local target position
             player.onChange(() => {
