@@ -1,7 +1,7 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import * as BABYLON from "@babylonjs/core";
-import { Maze } from "./components/Maze";
+import { Maze3D } from "./components/Maze3D";
 // @ts-ignore
 import characterGLB from "./assets/character.glb";
 import * as Colyseus from "colyseus.js";
@@ -171,7 +171,7 @@ let createScene = function (
         new BABYLON.Vector3(0, 1, 0),
     );
     new BABYLON.AxesViewer(scene, 1);
-    new Maze(SIZE, scene);
+    new Maze3D(SIZE, scene);
 
     createGround(scene);
 

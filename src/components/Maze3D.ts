@@ -1,9 +1,9 @@
 import * as BABYLON from "@babylonjs/core";
-import { Cell } from "./Cell";
+import { Cell3D } from "./Cell3D";
 import { WallTypeEnum } from "../enums/wall-type-enum";
 
-export class Maze {
-    private grid: Cell[][];
+export class Maze3D {
+    private grid: Cell3D[][];
     private readonly size: number;
     private readonly scene: BABYLON.Scene;
     private readonly visitArr: boolean[][];
@@ -18,7 +18,7 @@ export class Maze {
             this.grid.push([]);
             this.visitArr.push([]);
             for (let z = 0; z < this.size; z++) {
-                this.grid[x].push(new Cell(x, z, this.scene, this.size));
+                this.grid[x].push(new Cell3D(x, z, this.scene, this.size));
                 this.visitArr[x].push(false);
             }
         }

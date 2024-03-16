@@ -2,20 +2,20 @@ import * as BABYLON from "@babylonjs/core";
 import { CellWallConfigTRBL } from "../types/cell-types";
 import { WallTypeEnum } from "../enums/wall-type-enum";
 
-export class Cell {
-    private readonly positionX;
-    private readonly positionZ;
+export class Cell3D {
+    private static verWallMeshRef: BABYLON.Mesh | undefined;
+    private static horWallMeshRef: BABYLON.Mesh | undefined;
     public walls: CellWallConfigTRBL = {
         [WallTypeEnum.TOP]: true,
         [WallTypeEnum.RIGHT]: true,
         [WallTypeEnum.LEFT]: true,
         [WallTypeEnum.BOTTOM]: true,
     };
+    private readonly positionX;
+    private readonly positionZ;
     private wallMatRef: BABYLON.StandardMaterial | undefined;
     private readonly scene: BABYLON.Scene;
     private readonly size: number;
-    private static verWallMeshRef: BABYLON.Mesh | undefined;
-    private static horWallMeshRef: BABYLON.Mesh | undefined;
 
     public constructor(
         x: number,
@@ -27,6 +27,38 @@ export class Cell {
         this.positionZ = z;
         this.scene = scene;
         this.size = size;
+    }
+
+    public draw() {
+        if (this.walls[WallTypeEnum.LEFT] && this.positionX === 0) {
+            const wallL = this.createVerticalWall(
+                `wall_l_${this.positionX}_${this.positionZ}`,
+            );
+            wallL.position = this.getPosition(WallTypeEnum.LEFT);
+        }
+
+        if (this.walls[WallTypeEnum.RIGHT]) {
+            const wallR = this.createVerticalWall(
+                `wall_r_${this.positionX}_${this.positionZ}`,
+            );
+            wallR.position = this.getPosition(WallTypeEnum.RIGHT);
+        }
+
+        if (this.walls[WallTypeEnum.TOP] && this.positionZ === this.size - 1) {
+            const wallT = this.createHorizontalWall(
+                `wall_t_${this.positionX}_${this.positionZ}`,
+            );
+            wallT.position = this.getPosition(WallTypeEnum.TOP);
+        }
+
+        if (this.walls[WallTypeEnum.BOTTOM]) {
+            const wallB = this.createHorizontalWall(
+                `wall_b_${this.positionX}_${this.positionZ}`,
+            );
+            wallB.position = this.getPosition(WallTypeEnum.BOTTOM);
+        }
+
+        return this;
     }
 
     private getPosition(pos: WallTypeEnum) {
@@ -71,8 +103,8 @@ export class Cell {
     }
 
     private createVerticalWall(name: string) {
-        if (!Cell.verWallMeshRef) {
-            Cell.verWallMeshRef = BABYLON.MeshBuilder.CreateBox(
+        if (!Cell3D.verWallMeshRef) {
+            Cell3D.verWallMeshRef = BABYLON.MeshBuilder.CreateBox(
                 "verWall",
                 {
                     height: 1,
@@ -81,9 +113,9 @@ export class Cell {
                 },
                 this.scene,
             );
-            Cell.verWallMeshRef.setEnabled(false);
+            Cell3D.verWallMeshRef.setEnabled(false);
         }
-        const instance = Cell.verWallMeshRef.clone(name);
+        const instance = Cell3D.verWallMeshRef.clone(name);
         instance.material = this.getWallMat();
         instance.setEnabled(true);
         instance.checkCollisions = true;
@@ -92,8 +124,8 @@ export class Cell {
     }
 
     private createHorizontalWall(name: string) {
-        if (!Cell.horWallMeshRef) {
-            Cell.horWallMeshRef = BABYLON.MeshBuilder.CreateBox(
+        if (!Cell3D.horWallMeshRef) {
+            Cell3D.horWallMeshRef = BABYLON.MeshBuilder.CreateBox(
                 "horWall",
                 {
                     height: 1,
@@ -102,45 +134,13 @@ export class Cell {
                 },
                 this.scene,
             );
-            Cell.horWallMeshRef.setEnabled(false);
+            Cell3D.horWallMeshRef.setEnabled(false);
         }
-        const instance = Cell.horWallMeshRef.clone(name);
+        const instance = Cell3D.horWallMeshRef.clone(name);
         instance.material = this.getWallMat();
         instance.setEnabled(true);
         instance.checkCollisions = true;
         instance.ellipsoid = new BABYLON.Vector3(1, 1, 0.01);
         return instance;
-    }
-
-    public draw() {
-        if (this.walls[WallTypeEnum.LEFT] && this.positionX === 0) {
-            const wallL = this.createVerticalWall(
-                `wall_l_${this.positionX}_${this.positionZ}`,
-            );
-            wallL.position = this.getPosition(WallTypeEnum.LEFT);
-        }
-
-        if (this.walls[WallTypeEnum.RIGHT]) {
-            const wallR = this.createVerticalWall(
-                `wall_r_${this.positionX}_${this.positionZ}`,
-            );
-            wallR.position = this.getPosition(WallTypeEnum.RIGHT);
-        }
-
-        if (this.walls[WallTypeEnum.TOP] && this.positionZ === this.size - 1) {
-            const wallT = this.createHorizontalWall(
-                `wall_t_${this.positionX}_${this.positionZ}`,
-            );
-            wallT.position = this.getPosition(WallTypeEnum.TOP);
-        }
-
-        if (this.walls[WallTypeEnum.BOTTOM]) {
-            const wallB = this.createHorizontalWall(
-                `wall_b_${this.positionX}_${this.positionZ}`,
-            );
-            wallB.position = this.getPosition(WallTypeEnum.BOTTOM);
-        }
-
-        return this;
     }
 }
