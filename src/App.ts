@@ -8,6 +8,8 @@ import * as Colyseus from "colyseus.js";
 import { MazePlayRoomState, PlayerState } from "./classes/MazePlayRoomState";
 import { Player, PlayerAnimEnum } from "./classes/Player";
 import { throttle } from "./utils/throttle";
+import { ICell } from "./interfaces/ICell";
+import { WallTypeEnum } from "./enums/wall-type-enum";
 
 export class App {
     engine: BABYLON.Engine;
@@ -155,6 +157,82 @@ const startAnimation = (
 
 let CURRENT_ANIMATION = "";
 
+const createMaze = () => {
+    let grid: ICell[][] = [];
+    let visitArr: boolean[][] = [];
+
+    for (let x = 0; x < SIZE; x++) {
+        grid.push([]);
+        visitArr.push([]);
+        for (let z = 0; z < SIZE; z++) {
+            grid[x].push({
+                positionX: x,
+                positionZ: z,
+                walls: {
+                    [WallTypeEnum.TOP]: true,
+                    [WallTypeEnum.RIGHT]: true,
+                    [WallTypeEnum.LEFT]: true,
+                    [WallTypeEnum.BOTTOM]: true,
+                },
+            });
+            visitArr[x].push(false);
+        }
+    }
+
+    scan(Math.floor(Math.random() * SIZE), Math.floor(Math.random() * SIZE));
+
+    function scan(x: number, z: number) {
+        visitArr[x][z] = true;
+        const dirs = [
+            WallTypeEnum.LEFT,
+            WallTypeEnum.RIGHT,
+            WallTypeEnum.BOTTOM,
+            WallTypeEnum.TOP,
+        ];
+        dirs.sort(() => Math.random() - 0.5);
+        dirs.forEach((dir) => {
+            if (WallTypeEnum.LEFT === dir) {
+                if (x > 0) {
+                    if (!visitArr[x - 1][z]) {
+                        grid[x - 1][z].walls[WallTypeEnum.RIGHT] = false;
+                        grid[x][z].walls[WallTypeEnum.LEFT] = false;
+                        scan(x - 1, z);
+                    }
+                }
+            }
+            if (WallTypeEnum.RIGHT === dir) {
+                if (x < SIZE - 1) {
+                    if (!visitArr[x + 1][z]) {
+                        grid[x][z].walls[WallTypeEnum.RIGHT] = false;
+                        grid[x + 1][z].walls[WallTypeEnum.LEFT] = false;
+                        scan(x + 1, z);
+                    }
+                }
+            }
+            if (WallTypeEnum.TOP === dir) {
+                if (z < SIZE - 1) {
+                    if (!visitArr[x][z + 1]) {
+                        grid[x][z + 1].walls[WallTypeEnum.BOTTOM] = false;
+                        grid[x][z].walls[WallTypeEnum.TOP] = false;
+                        scan(x, z + 1);
+                    }
+                }
+            }
+            if (WallTypeEnum.BOTTOM === dir) {
+                if (z > 0) {
+                    if (!visitArr[x][z - 1]) {
+                        grid[x][z].walls[WallTypeEnum.BOTTOM] = false;
+                        grid[x][z - 1].walls[WallTypeEnum.TOP] = false;
+                        scan(x, z - 1);
+                    }
+                }
+            }
+        });
+    }
+
+    return grid;
+};
+
 let createScene = function (
     scene: BABYLON.Scene,
     canvas: HTMLCanvasElement,
@@ -171,7 +249,7 @@ let createScene = function (
         new BABYLON.Vector3(0, 1, 0),
     );
     new BABYLON.AxesViewer(scene, 1);
-    new Maze3D(SIZE, scene);
+    new Maze3D(createMaze(), SIZE, scene);
 
     createGround(scene);
 
