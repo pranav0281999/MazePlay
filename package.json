@@ -1,5 +1,5 @@
 {
-  "name": "friends",
+  "name": "maze-play-ui",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite --host",
