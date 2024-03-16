@@ -36,4 +36,6 @@ export class PlayerState extends Schema {
 
 export class MazePlayRoomState extends Schema {
     @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
+    @type("string") cells: string = "";
+    @type("number") size: number = 20;
 }

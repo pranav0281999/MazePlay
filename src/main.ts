@@ -61,11 +61,15 @@ function startRender() {
     );
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+// window.addEventListener("DOMContentLoaded", () => {
+//     joinRoom(serverUrlInput.value).then(() => {
+//         startRender();
+//     });
+// });
+
+joinBtn.addEventListener("click", () => {
     joinRoom(serverUrlInput.value).then(() => {
         startRender();
     });
 });
-
-joinBtn.addEventListener("click", () => joinRoom(serverUrlInput.value));
 startBtn.addEventListener("click", startRender);
