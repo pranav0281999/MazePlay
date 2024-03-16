@@ -1,9 +1,10 @@
 import * as BABYLON from "@babylonjs/core";
 import { Cell3D } from "./Cell3D";
 import { WallTypeEnum } from "../enums/wall-type-enum";
+import { ICell } from "../interfaces/ICell";
 
 export class Maze3D {
-    private grid: Cell3D[][];
+    private grid: ICell[][];
     private readonly size: number;
     private readonly scene: BABYLON.Scene;
     private readonly visitArr: boolean[][];
@@ -18,7 +19,16 @@ export class Maze3D {
             this.grid.push([]);
             this.visitArr.push([]);
             for (let z = 0; z < this.size; z++) {
-                this.grid[x].push(new Cell3D(x, z, this.scene, this.size));
+                this.grid[x].push({
+                    positionX: x,
+                    positionZ: z,
+                    walls: {
+                        [WallTypeEnum.TOP]: true,
+                        [WallTypeEnum.RIGHT]: true,
+                        [WallTypeEnum.LEFT]: true,
+                        [WallTypeEnum.BOTTOM]: true,
+                    },
+                });
                 this.visitArr[x].push(false);
             }
         }
@@ -30,7 +40,7 @@ export class Maze3D {
 
         for (let x = 0; x < this.size; x++) {
             for (let z = 0; z < this.size; z++) {
-                this.grid[x][z].draw();
+                new Cell3D(this.grid[x][z], scene, size).draw();
             }
         }
     }

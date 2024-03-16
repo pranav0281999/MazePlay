@@ -1,30 +1,22 @@
 import * as BABYLON from "@babylonjs/core";
 import { CellWallConfigTRBL } from "../types/cell-types";
 import { WallTypeEnum } from "../enums/wall-type-enum";
+import { ICell } from "../interfaces/ICell";
 
-export class Cell3D {
+export class Cell3D implements ICell {
     private static verWallMeshRef: BABYLON.Mesh | undefined;
     private static horWallMeshRef: BABYLON.Mesh | undefined;
-    public walls: CellWallConfigTRBL = {
-        [WallTypeEnum.TOP]: true,
-        [WallTypeEnum.RIGHT]: true,
-        [WallTypeEnum.LEFT]: true,
-        [WallTypeEnum.BOTTOM]: true,
-    };
-    private readonly positionX;
-    private readonly positionZ;
+    public walls: CellWallConfigTRBL;
+    public readonly positionX: number;
+    public readonly positionZ: number;
     private wallMatRef: BABYLON.StandardMaterial | undefined;
     private readonly scene: BABYLON.Scene;
     private readonly size: number;
 
-    public constructor(
-        x: number,
-        z: number,
-        scene: BABYLON.Scene,
-        size: number,
-    ) {
-        this.positionX = x;
-        this.positionZ = z;
+    public constructor(cell: ICell, scene: BABYLON.Scene, size: number) {
+        this.positionX = cell.positionX;
+        this.positionZ = cell.positionZ;
+        this.walls = cell.walls;
         this.scene = scene;
         this.size = size;
     }
