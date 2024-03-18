@@ -13,7 +13,7 @@
   "devDependencies": {
     "@types/earcut": "^2.1.4",
     "typescript": "^5.3.3",
-    "vite": "^5.0.11"
+    "vite": "^5.0.12"
   },
   "dependencies": {
     "@babylonjs/core": "^6.41.0",
